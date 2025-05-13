@@ -6,7 +6,10 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./PriceConsumer.sol";
 
 contract ZDex is ReentrancyGuard {
-    IERC20 public ethReserve;
+    IERC20 public token;
+    PriceConsumer public priceConsumer;
+
+    uint256 ethReserve;
     uint256 public tokenReserve;
 
     event LiquidityAdded(address provider, uint256 ethAmount, uint256 tokenAmount);
@@ -40,7 +43,7 @@ contract ZDex is ReentrancyGuard {
         require(token.transferFrom(msg.sender, address(this), tokenAmount), "Token Transfer failed");
         emit LiquidityAdded(msg.sender, msg.value, tokenAmount);
     }
-}
+
 
 function removeLiquidity(uint256 liquidityTokens) public nonReentrant {
     require(liquidityTokens > 0, "Cannot Remove zero token");
@@ -57,10 +60,10 @@ function removeLiquidity(uint256 liquidityTokens) public nonReentrant {
 }
 
 
-function ethToTokenSwap(uint256 minTokens) public payable nonRenetrant {
+function ethToTokenSwap(uint256 minTokens) public payable nonReentrant {
     require(msg.value > 0, "ETH amount should be greater than zero");
-    uint256 tokenAmount = getInputAmount(tokenAmount, tokenReserve, ethReserve);
-    require(ethAmount >= mintEth, "Insufficient output amount");
+    uint256 tokenAmount = getInputAmount(msg.value, ethReserve, tokenReserve);
+    require(tokenAmount >= minTokens, "Insufficient output amount");
 
     ethReserve += msg.value;
     tokenReserve -= tokenAmount;
@@ -74,10 +77,10 @@ function getInputAmount(uint256 inputAmount, uint256 inputReserve, uint256 outpu
     uint256 inputAmountWithFee = inputAmount * 997;
     uint256 numerator = inputAmountWithFee * outputReserve;
     uint256 denominator = (inputReserve *1000) + inputAmountWithFee;
-    return numeratore / denominator;
+    return numerator / denominator;
 }
 
-function tokenToEthSwap(uint256 tokenAmount, uin256 minEth) public nonReentrant {
+function tokenToEthSwap(uint256 tokenAmount, uint256 minEth) public nonReentrant {
     require(tokenAmount > 0, "Token should be more than zero");
     uint256 ethAmount = getInputAmount(tokenAmount, tokenReserve, ethReserve);
     require(ethAmount >= minEth, "Insufficient amount to swap");
@@ -97,4 +100,6 @@ function getTokenAmount(uint256 ethAmount) public view returns (uint256) {
 
 function getEthAmount(uint256 tokenAmount) public view returns(uint256) {
     return getInputAmount(tokenAmount, tokenReserve, ethReserve);
+}
+
 }
