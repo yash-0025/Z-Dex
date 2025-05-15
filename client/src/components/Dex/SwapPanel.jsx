@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useDex } from '../../hooks/useDex'
-import { Button } from '../UI/Button'
-import { Input } from '../UI/Input'
+import  Button  from '../UI/Button'
+import  Input  from '../UI/Input'
 import { ArrowDownIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline'
 
 export const SwapPanel = () => {

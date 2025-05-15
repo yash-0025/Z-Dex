@@ -1,6 +1,6 @@
 
 import './App.css'
-import SwapPanel from './components/Dex/SwapPanel'
+import {SwapPanel} from "./components/Dex/SwapPanel"
 import Footer from './components/Layout/Footer'
 import Header from './components/Layout/Header'
 import Layout from './components/Layout/Layout'

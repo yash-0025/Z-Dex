@@ -7,7 +7,7 @@ import { readContract } from "viem/actions";
 
 
 
-export const useDex = (tokenAddress, dexAddress) => {
+export const useDex = () => {
 
     const {address} = useAccount();
     const chainId = useChainId();
@@ -62,7 +62,7 @@ export const useDex = (tokenAddress, dexAddress) => {
         functionName: 'getTokenPriceInETH',
     });
 
-    const {writeContract: ethToTokenSwap } = useWritecontract();
+    const {writeContract: ethToTokenSwap } = useWriteContract();
 
     const {writeContract:tokenToEthSwap} = useWriteContract();
     const {writeContract: addLiquidity} = useWriteContract();
@@ -150,17 +150,17 @@ export const useDex = (tokenAddress, dexAddress) => {
                 addLiquidity({
                     ...dexContractConfig,
                     functionname: 'addLiqudity',
-                    value: parseEther(ethLiquidityAmount);
+                    value: parseEther(ethLiquidityAmount),
                     args:[parseEther(liquidityAmount)]
                 })
             }
         })
-    }, [ethLiquidityAmount, liquidityAmount, tokenContractConfig, dexContractConfig, approve, addLiqudity])
+    }, [ethLiquidityAmount, liquidityAmount, tokenContractConfig, dexContractConfig, approve, addLiquidity])
 
 
 
 
-    const handleRemoveLiqudity = useCallbakc(() => {
+    const handleRemoveLiqudity = useCallback(() => {
         if(!liquidityAmount) return;
 
         removeLiquidty({
