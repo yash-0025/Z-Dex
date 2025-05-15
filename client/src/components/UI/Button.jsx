@@ -72,7 +72,7 @@ const animateVariants = {
   return(
     <motion.button 
     whileHover="hover"
-    whiteTap="tap"
+    whitetap="tap"
     variants={animateVariants}
     className={`${baseClasses} ${sizes[size]} ${variants[variant]} ${className}`}
     disabled={isLoading}

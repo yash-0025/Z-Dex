@@ -1,4 +1,5 @@
 import { useReadContract } from "wagmi"
+import { useMemo } from "react"
 import { motion } from "framer-motion"
 import { DEX_ABI } from "../../utils/constants"
 import { ChartBarIcon, CurrencyDollarIcon, ArrowsRightLeftIcon, ArrowTrendingUpIcon } from "@heroicons/react/24/outline"
@@ -16,7 +17,14 @@ export const StatsPanel = ({ dexAddress }) => {
         functionName: 'tokenReserve'
     })
 
-    const state = [
+       // Calculate TVL (assuming 1 ETH = $2000 for demo)
+    const tvl = useMemo(() => {
+        if (!ethReserve) return 0
+        const ethAmount = parseFloat(formatEther(ethReserve))
+        return ethAmount * 2 * 2000 // 2x because AMMs have equal value on both sides
+    }, [ethReserve])
+    
+    const stats = [
         {
             name: 'ETH Reserve',
             value: ethReserve ? `${(parseInt(ethReserve) / 1e18).toFixed(4)} ETH` : `0 ETH`,

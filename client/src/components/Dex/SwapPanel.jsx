@@ -3,48 +3,59 @@ import { useDex } from '../../hooks/useDex'
 import Button from '../UI/Button'
 import Input from '../UI/Input'
 import { ArrowDownIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline'
-import { useState, useEffect } from 'react'
+import { useConnect } from 'wagmi'
 
 export const SwapPanel = () => {
-  const {
+   const {
     fromAmount,
     toAmount,
     setFromAmount,
-    slippage,
-    setSlippage,
+    setToAmount,
+    handleSwap,
+    getSwapOutput, // Add this destructuring
     ethBalance,
     tokenBalance,
     ethReserve,
     tokenReserve,
-    tokenPrice,
-    handleEthToTokenSwap,
-    handleTokenToEthSwap,
+    priceImpact,
+    isLoading,
     isConnected
   } = useDex()
 
-  const [isEthToZdex, setIsEthToZdex] = useState(true)
 
-  const handleReverse = () => {
-    setIsEthToZdex(!isEthToZdex)
-    setFromAmount(toAmount)
+
+   const handleConnectWallet = () => {
+    // This will be handled by the Header's connect button
+    // The button will just trigger the Header's modal
+    document.dispatchEvent(new Event('openWalletModal'))
   }
 
-  const priceImpact = useMemo(() => {
-    if (!fromAmount || !ethReserve || !tokenReserve) return 0
+   // Modified handleReverse function
+  const handleReverse = async () => {
+    if (!fromAmount) return;
     
-    const inputAmount = parseFloat(fromAmount)
-    const inputReserve = parseFloat(ethReserve)
-    const outputReserve = parseFloat(tokenReserve)
-    
-    if (inputReserve === 0 || outputReserve === 0) return 0
-    
-    const newInputReserve = inputReserve + (isEthToZdex ? inputAmount : 0)
-    const newOutputReserve = outputReserve + (isEthToZdex ? 0 : inputAmount)
-    const priceImpact = ((outputReserve - newOutputReserve) / outputReserve) * 100
-    
-    return Math.abs(priceImpact).toFixed(2)
-  }, [fromAmount, ethReserve, tokenReserve, isEthToZdex])
-
+    try {
+      // Store current values
+      const currentFrom = fromAmount;
+      const currentTo = toAmount;
+      
+      // Clear inputs temporarily
+      setFromAmount('');
+      setToAmount('');
+      
+      // Calculate new values
+      const newToAmount = await getSwapOutput(currentFrom, false);
+      
+      // Swap the values
+      setFromAmount(currentTo || '0');
+      setToAmount(newToAmount);
+    } catch (error) {
+      console.error("Error reversing swap:", error);
+      // Revert to original values on error
+      setFromAmount(fromAmount);
+      setToAmount(toAmount);
+    }
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -52,12 +63,13 @@ export const SwapPanel = () => {
       className="w-full max-w-md mx-auto"
     >
       <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-800/50 shadow-lg">
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <motion.h2 
             className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent"
             whileHover={{ scale: 1.02 }}
           >
-            {isEthToZdex ? 'ETH → ZDEX' : 'ZDEX → ETH'}
+            Swap Tokens
           </motion.h2>
           <motion.button
             whileHover={{ rotate: 180 }}
@@ -70,16 +82,20 @@ export const SwapPanel = () => {
           </motion.button>
         </div>
         
+        {/* Swap Form */}
         <div className="space-y-4">
+          {/* From Input */}
           <Input 
             label="From" 
-            balance={isEthToZdex ? `${ethBalance} ETH` : `${tokenBalance} ZDEX`}
+            balance={`${ethBalance} ETH`}
             value={fromAmount}
             onChange={(e) => setFromAmount(e.target.value)}
             placeholder="0.0"
-            token={isEthToZdex ? 'ETH' : 'ZDEX'}
+            token="ETH"
+            className="hover:bg-gray-800/30"
           />
           
+          {/* Swap Direction Button */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center justify-center">
               <motion.button
@@ -98,15 +114,18 @@ export const SwapPanel = () => {
             <div className="h-px bg-gray-800/50 w-full" />
           </div>
           
+          {/* To Input */}
           <Input
             label="To"
-            balance={isEthToZdex ? `${tokenBalance} ZDEX` : `${ethBalance} ETH`}
+            balance={`${tokenBalance} ZDEX`}
             value={toAmount}
             readOnly
             placeholder="0.0"
-            token={isEthToZdex ? 'ZDEX' : 'ETH'}
+            token="ZDEX"
+            className="hover:bg-gray-800/30"
           />
           
+          {/* Swap Info */}
           <div className="flex flex-col gap-1 text-sm text-gray-400 px-2">
             <div className="flex justify-between">
               <span>ETH Reserve</span>
@@ -121,12 +140,6 @@ export const SwapPanel = () => {
               </span>
             </div>
             <div className="flex justify-between">
-              <span>Exchange Rate</span>
-              <span className="text-gray-300">
-                {ethReserve && tokenReserve ? `1 ETH = ${(parseFloat(tokenReserve)/parseFloat(ethReserve)).toFixed(4)} ZDEX` : 'Loading...'}
-              </span>
-            </div>
-            <div className="flex justify-between">
               <span>Price Impact</span>
               <span className={priceImpact > 2 ? 'text-rose-400' : 'text-emerald-400'}>
                 {priceImpact}%
@@ -134,12 +147,16 @@ export const SwapPanel = () => {
             </div>
           </div>
           
+          {/* Swap Button */}
           <Button 
-            onClick={isEthToZdex ? handleEthToTokenSwap : handleTokenToEthSwap}
-            disabled={!isConnected || !fromAmount}
+            onClick={isConnected ? handleSwap : handleConnectWallet}
+            isLoading={isLoading}
+            disabled={isConnected ? (!fromAmount || isLoading) : false}
             className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
           >
-            {isConnected ? (isEthToZdex ? 'Swap ETH for ZDEX' : 'Swap ZDEX for ETH') : 'Connect Wallet'}
+            {isConnected ? 'Swap' : 'Connect Wallet'}
           </Button>
         </div>
       </div>

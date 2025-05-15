@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   useAccount, 
@@ -20,6 +19,22 @@ const Header = () => {
   const { disconnect } = useDisconnect();
   const { data: ensName } = useEnsName({ address });
   const { data: ensAvatar } = useEnsAvatar({ name: ensName });
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+
+  // Add event listener for external open requests
+  useEffect(() => {
+    const handleOpenModal = () => setWalletModalOpen(true);
+    document.addEventListener('openWalletModal', handleOpenModal);
+    return () => document.removeEventListener('openWalletModal', handleOpenModal);
+  }, []);
+
+  const handleDisconnect = () => {
+    try {
+      disconnect();
+    } catch (error) {
+      console.error('Error disconnecting wallet:', error);
+    }
+  };
 
   return (
     <motion.header 
@@ -43,7 +58,6 @@ const Header = () => {
           </h1>
         </motion.div>
 
-
         {/* Wallet Connection */}
         {isConnected ? (
           <motion.div
@@ -65,30 +79,41 @@ const Header = () => {
               {ensName || shortenAddress(address)}
             </span>
             <button 
-              onClick={() => disconnect()}
+              onClick={handleDisconnect}
               className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors"
             >
               <ArrowRightEndOnRectangleIcon className="h-5 w-5 text-gray-400 hover:text-red-400" />
             </button>
           </motion.div>
         ) : (
-          <ConnectWalletButton />
+          <ConnectWalletButton 
+            walletModalOpen={walletModalOpen}
+            setWalletModalOpen={setWalletModalOpen}
+          />
         )}
       </div>
     </motion.header>
   );
 };
 
-const ConnectWalletButton = () => {
-  const [showOptions, setShowOptions] = useState(false);
+const ConnectWalletButton = ({ walletModalOpen, setWalletModalOpen }) => {
   const { connectors, connect } = useConnect();
+
+  const handleConnect = (connector) => {
+    try {
+      connect({ connector });
+      setWalletModalOpen(false);
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+    }
+  };
 
   return (
     <div className="relative">
       <motion.button
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
-        onClick={() => setShowOptions(!showOptions)}
+        onClick={() => setWalletModalOpen(true)}
         className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600/20 to-purple-600/20 hover:from-blue-600/30 hover:to-purple-600/30 rounded-xl border border-gray-700 hover:border-gray-600 transition-all duration-300 group"
       >
         <WalletIcon className="h-5 w-5 text-blue-400 group-hover:text-purple-300 transition-colors" />
@@ -99,7 +124,7 @@ const ConnectWalletButton = () => {
       </motion.button>
 
       <AnimatePresence>
-        {showOptions && (
+        {walletModalOpen && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -110,10 +135,7 @@ const ConnectWalletButton = () => {
               {connectors.map((connector) => (
                 <button
                   key={connector.uid}
-                  onClick={() => {
-                    connect({ connector });
-                    setShowOptions(false);
-                  }}
+                  onClick={() => handleConnect(connector)}
                   className="block w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-gray-700/50 hover:text-blue-300 transition-colors"
                 >
                   {connector.name}
@@ -126,4 +148,5 @@ const ConnectWalletButton = () => {
     </div>
   );
 };
+
 export default Header;

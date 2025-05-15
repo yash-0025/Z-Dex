@@ -9,11 +9,14 @@ import { readContract } from "viem/actions";
 
 export const useDex = () => {
 
-    const {address} = useAccount();
+    const {address, isConnected} = useAccount();
     const chainId = useChainId();
 
-    const [tokenAddress, setTokenAddress] = useState('');
-    const [dexAddress, setDexAddress] = useState('');
+    const tokenAddress = import.meta.env.VITE_TOKEN_ADDRESS;
+    const dexAddress = import.meta.env.VITE_DEX_ADDRESS;
+
+    // const [tokenAddress, setTokenAddress] = useState('');
+    // const [dexAddress, setDexAddress] = useState('');
     // const [priceFeedAddress, setPriceFeedAddress] = useState('')
 
 
@@ -173,7 +176,7 @@ export const useDex = () => {
 
     const formattedValues = useMemo(() => ({
         ethBalance: ethBalance ? formatEther(ethBalance.value) : '0',
-        tokenBalance: tokenBalance ?  formatEther(tokenBalance.valule) : '0',
+        tokenBalance: tokenBalance ?  formatEther(tokenBalance.value) : '0',
         ethReserve:  ethReserve ? formatEther(ethReserve) : '0',
         tokenReserve: tokenReserve ? formatEther(tokenReserve) : '0',
         tokenPrice: tokenPrice ? formatEther(tokenPrice) : '0',
@@ -189,11 +192,13 @@ export const useDex = () => {
         // ADDRESSES
         tokenAddress,
         dexAddress,
-        setTokenAddress,
-        setDexAddress,
+        isConnected,
+        address,
+       
 
     // SWAP
     fromAmount,
+    getSwapOutput,
     toAmount,
     setFromAmount,
     setToAmount,
