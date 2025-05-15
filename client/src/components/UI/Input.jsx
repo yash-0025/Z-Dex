@@ -1,10 +1,14 @@
 import React from 'react'
-import {motion} from "framer-motion"
+import { motion } from "framer-motion"
+
 const Input = ({
     label,
     balance,
+    value,
+    onChange,
     placeholder,
     token,
+    readOnly = false,
     className = ''
 }) => {
     return (
@@ -16,19 +20,18 @@ const Input = ({
                 <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
                     {label}
                 </span>
-                <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="text-xs text-gray-400 hover:text-blue-400 transition-colors"
-                >
+                <span className="text-xs text-gray-400">
                     Balance: <span className="font-medium">{balance}</span>
-                </motion.button>
+                </span>
             </div>
 
             <div className="flex items-center gap-2">
                 <input
                     type="number"
+                    value={value}
+                    onChange={onChange}
                     placeholder={placeholder}
+                    readOnly={readOnly}
                     className="w-full bg-transparent text-2xl outline-none placeholder-gray-600"
                 />
                 <motion.div
@@ -38,13 +41,9 @@ const Input = ({
                     <span className="text-sm font-medium text-gray-200">
                         {token}
                     </span>
-                    <motion.span className="text-xs text-gray-400">
-                        ▼
-                    </motion.span>
                 </motion.div>
             </div>
 
-            {/* Focus indicator */}
             <motion.div
                 className="absolute inset-x-0 bottom-0 h-0.5 bg-blue-500"
                 initial={{ scaleX: 0 }}
