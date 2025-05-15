@@ -13,7 +13,7 @@ export const LiquidityPanel = () => {
         setLiquidityAmount,
         setEthLiquidityAmount,
         handleAddLiquidity,
-        handleRemoveLiqudity,
+        handleRemoveLiquidity,
         ethBalance,
         tokenBalance,
         ethReserve,
@@ -33,7 +33,7 @@ export const LiquidityPanel = () => {
     >
       <div className="flex border-b border-gray-800/50 mb-6">
         <button
-          className={`px-4 py-2 font-medium relative ${activeTab === 'add' ? 'text-blue-400' : 'text-gray-400 hover:text-gray-300'}`}
+          className={`px-4 py-2 font-medium relative ${acitveTab === 'add' ? 'text-blue-400' : 'text-gray-400 hover:text-gray-300'}`}
           onClick={() => setActiveTab('add')}
         >
           Add Liquidity

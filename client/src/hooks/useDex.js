@@ -160,7 +160,7 @@ export const useDex = () => {
 
 
 
-    const handleRemoveLiqudity = useCallback(() => {
+    const handleRemoveLiquidity = useCallback(() => {
         if(!liquidityAmount) return;
 
         removeLiquidty({
@@ -209,7 +209,7 @@ export const useDex = () => {
     setLiquidityAmount,
     setEthLiquidityAmount,
     handleAddLiquidity,
-    handleRemoveLiqudity,
+    handleRemoveLiquidity,
 
     // BALANCE and RESERVE
     ...formattedValues,
