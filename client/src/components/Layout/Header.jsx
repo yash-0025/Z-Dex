@@ -91,6 +91,7 @@ const Header = () => {
           </h1>
         </motion.div>
 
+        
         {/* Wallet Connection */}
         {isConnected ? (
           <motion.div

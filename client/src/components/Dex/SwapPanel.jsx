@@ -1,47 +1,66 @@
-import React from 'react'
-import {motion} from "framer-motion"
-import Card from '../UI/Card'
-import Button from '../UI/Button'
-import Input from '../UI/Input'
-import {ArrowDownIcon, ArrowsRightLeftIcon} from "@heroicons/react/24/outline"
+import { motion } from 'framer-motion'
+import { useDex } from '../../hooks/useDex'
+import { Button } from '../UI/Button'
+import { Input } from '../UI/Input'
+import { ArrowDownIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline'
 
-const SwapPanel = () => {
+export const SwapPanel = () => {
+  const {
+    fromAmount,
+    toAmount,
+    setFromAmount,
+    // setToAmount,
+    handleSwap,
+    handleReverse,
+    ethBalance,
+    tokenBalance,
+    ethReserve,
+    tokenReserve,
+    priceImpact,
+    isLoading,
+    isConnected
+  } = useDex()
+
   return (
- <motion.div
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      className="w-full max-w-md mx-auto" // Proper sizing constraint
     >
-      <Card className="bg-gray-900/50 backdrop-blur-sm border border-gray-800/50">
-        {/* Header with animated refresh */}
+      <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-800/50 shadow-lg">
+        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <motion.h2 
-            className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"
+            className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent"
             whileHover={{ scale: 1.02 }}
           >
-            Token Swap
+            Swap Tokens
           </motion.h2>
           <motion.button
             whileHover={{ rotate: 180 }}
             whileTap={{ scale: 0.9 }}
-            className="text-gray-400 hover:text-blue-400 transition-colors"
-            title="Refresh rates"
+            onClick={handleReverse}
+            className="p-2 rounded-full hover:bg-gray-800/50 transition-colors"
+            title="Reverse tokens"
           >
-            <ArrowsRightLeftIcon className="h-5 w-5" />
+            <ArrowsRightLeftIcon className="h-5 w-5 text-blue-400" />
           </motion.button>
         </div>
         
+        {/* Swap Form */}
         <div className="space-y-4">
-          {/* From Input */}
+          {/* From Input - Changed to ETH to ZDEX */}
           <Input 
             label="From" 
-            balance="0.5 ETH"
+            balance={`${ethBalance} ETH`}
+            value={fromAmount}
+            onChange={(e) => setFromAmount(e.target.value)}
             placeholder="0.0"
             token="ETH"
-            className="bg-gray-800/50 hover:bg-gray-800/70 focus:ring-2 focus:ring-blue-500/30"
+            className="hover:bg-gray-800/30"
           />
           
-          {/* Swap direction button */}
+          {/* Swap Direction Button */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center justify-center">
               <motion.button
@@ -50,6 +69,7 @@ const SwapPanel = () => {
                   backgroundColor: 'rgba(56, 182, 255, 0.2)'
                 }}
                 whileTap={{ scale: 0.9 }}
+                onClick={handleReverse}
                 className="p-2 z-10 bg-gray-800 rounded-full border-2 border-gray-700 hover:border-blue-400 transition-all"
                 title="Switch tokens"
               >
@@ -59,34 +79,52 @@ const SwapPanel = () => {
             <div className="h-px bg-gray-800/50 w-full" />
           </div>
           
-          {/* To Input */}
+          {/* To Input - Changed to ZDEX */}
           <Input
             label="To"
-            balance="150.2 USDC"
+            balance={`${tokenBalance} ZDEX`} // Changed from USDC to ZDEX
+            value={toAmount}
+            readOnly
             placeholder="0.0"
-            token="USDC"
-            className="bg-gray-800/50 hover:bg-gray-800/70 focus:ring-2 focus:ring-blue-500/30"
+            token="ZDEX" // Changed from USDC to ZDEX
+            className="hover:bg-gray-800/30"
           />
           
-          {/* Swap button with loading state potential */}
+          {/* Swap Info - Now shows real reserves */}
+          <div className="flex flex-col gap-1 text-sm text-gray-400 px-2">
+            <div className="flex justify-between">
+              <span>ETH Reserve</span>
+              <span className="text-gray-300">
+                {ethReserve ? parseFloat(ethReserve).toFixed(4) : '0'} ETH
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>ZDEX Reserve</span>
+              <span className="text-gray-300">
+                {tokenReserve ? parseFloat(tokenReserve).toFixed(2) : '0'} ZDEX
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span>Price Impact</span>
+              <span className={priceImpact > 2 ? 'text-rose-400' : 'text-emerald-400'}>
+                {priceImpact}%
+              </span>
+            </div>
+          </div>
+          
+          {/* Swap Button */}
           <Button 
-            className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 transition-all"
+            onClick={handleSwap}
+            isLoading={isLoading}
+            disabled={!isConnected || !fromAmount || isLoading}
+            className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
           >
-            <motion.span 
-              className="font-medium"
-              initial={{ opacity: 1 }}
-              animate={{ opacity: 1 }}
-            >
-              Swap
-            </motion.span>
+            {isConnected ? 'Swap' : 'Connect Wallet'}
           </Button>
         </div>
-      </Card>
+      </div>
     </motion.div>
   )
 }
-  
-
-export default SwapPanel
