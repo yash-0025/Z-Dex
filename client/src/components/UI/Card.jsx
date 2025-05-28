@@ -1,7 +1,5 @@
-import React, { Children } from 'react'
-import { motion } from "framer-motion"
-
-
+import React from 'react';
+import { motion } from 'framer-motion';
 
 const Card = ({ children, className = '' }) => {
     return (
@@ -20,7 +18,7 @@ const Card = ({ children, className = '' }) => {
             </div>
             {children}
         </motion.div>
-    )
-}
+    );
+};
 
-export default Card
+export default Card;

@@ -1,9 +1,9 @@
-import React from 'react'
-import { motion } from "framer-motion"
+import React from 'react';
+import { motion } from 'framer-motion';
 
 const Input = ({
     label,
-    balance,
+    balance, // This prop directly receives the formatted balance string (e.g., "0.5 ETH" or "100 ZDEX")
     value,
     onChange,
     placeholder,
@@ -51,7 +51,7 @@ const Input = ({
                 transition={{ duration: 0.3 }}
             />
         </motion.div>
-    )
-}
+    );
+};
 
-export default Input
+export default Input;

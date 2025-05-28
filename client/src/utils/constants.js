@@ -596,3 +596,7 @@ export const TOKEN_ABI = [
                     ]
                 }
             ]
+
+
+export const ZDEX_CONTRACT_ADDRESS = "0xF6552D52507e1E44B28075ab705aec6F782C4552"
+export const TOKEN_CONTRACT_ADDRESS = "0x2B8A8A929f5a9f9a072D3e20E48D07575d95FC64"

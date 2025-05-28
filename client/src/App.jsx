@@ -10,59 +10,61 @@ import { useState } from 'react'
 import { Tab } from '@headlessui/react'
 
 function App() {
-  const dex = useDex()
-  const [selectedIndex, setSelectedIndex] = useState(0)
+    const dex = useDex();
+    const [selectedIndex, setSelectedIndex] = useState(0);
 
-  return (
-    <Layout>
-      <Header />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Swap and Liquidity */}
-          <div className="lg:col-span-2 space-y-6">
-            <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
-              <Tab.List className="flex space-x-1 rounded-xl bg-gray-800/50 p-1">
-                <Tab
-                  className={({ selected }) =>
-                    `w-full py-2.5 text-sm font-medium rounded-lg transition-all ${selected
-                      ? 'bg-blue-600/90 text-white shadow'
-                      : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
-                    }`
-                  }
-                >
-                  Swap
-                </Tab>
-                <Tab
-                  className={({ selected }) =>
-                    `w-full py-2.5 text-sm font-medium rounded-lg transition-all ${selected
-                      ? 'bg-blue-600/90 text-white shadow'
-                      : 'text-gray-300 hover:bg-gray-700/50 hover:text-white'
-                    }`
-                  }
-                >
-                  Liquidity
-                </Tab>
-              </Tab.List>
-              <Tab.Panels className="mt-2">
-                <Tab.Panel>
-                  <SwapPanel />
-                </Tab.Panel>
-                <Tab.Panel>
-                  <LiquidityPanel />
-                </Tab.Panel>
-              </Tab.Panels>
-            </Tab.Group>
-          </div>
+    return (
+        <Layout>
+            <Header />
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Left Column - Swap and Liquidity */}
+                    <div className="lg:col-span-2 space-y-6">
+                        <Tab.Group selectedIndex={selectedIndex} onChange={setSelectedIndex}>
+                            <div className="flex flex-col">
+                                <Tab.List className="flex space-x-1 p-1 bg-gray-900/50 rounded-t-xl border-b border-gray-800/50">
+                                    <Tab
+                                        className={({ selected }) =>
+                                            `px-4 py-2 text-sm font-medium rounded-t-md transition-all duration-200 ${selected
+                                                ? 'text-blue-400 border-b-2 border-blue-400 bg-gray-800/30'
+                                                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/20'
+                                            }`
+                                        }
+                                    >
+                                        Swap
+                                    </Tab>
+                                    <Tab
+                                        className={({ selected }) =>
+                                            `px-4 py-2 text-sm font-medium rounded-t-md transition-all duration-200 ${selected
+                                                ? 'text-blue-400 border-b-2 border-blue-400 bg-gray-800/30'
+                                                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800/20'
+                                            }`
+                                        }
+                                    >
+                                        Liquidity
+                                    </Tab>
+                                </Tab.List>
+                                <Tab.Panels className="bg-gray-900/50 rounded-b-xl border border-t-0 border-gray-800/50">
+                                    <Tab.Panel className="p-6">
+                                        <SwapPanel />
+                                    </Tab.Panel>
+                                    <Tab.Panel className="p-6">
+                                        <LiquidityPanel />
+                                    </Tab.Panel>
+                                </Tab.Panels>
+                            </div>
+                        </Tab.Group>
+                    </div>
 
-          {/* Right Column - Stats */}
-          <div className="lg:col-span-1">
-            <StatsPanel dexAddress={dex.dexAddress} />
-          </div>
-        </div>
-      </div>
-      <Footer />
-    </Layout>
-  )
+                    {/* Right Column - Stats */}
+                    <div className="lg:col-span-1">
+                        <StatsPanel dexAddress={dex.dexAddress} />
+                    </div>
+                </div>
+            </div>
+            <Footer />
+        </Layout>
+    );
 }
 
-export default App
+export default App;
