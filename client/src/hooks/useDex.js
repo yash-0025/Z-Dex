@@ -19,6 +19,7 @@ export const useDex = () => {
     const [slippage, setSlippage] = useState(0.5);
     const [liquidityAmount, setLiquidityAmount] = useState('');
     const [ethLiquidityAmount, setEthLiquidityAmount] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     // Contract configs
     const dexContractConfig = useMemo(() => ({
@@ -31,11 +32,16 @@ export const useDex = () => {
         abi: TOKEN_ABI,
     }), [tokenAddress]);
 
-
-    
     // ETH Balance
     const { data: ethBalanceData } = useBalance({ address, watch: true });
     const ethBalance = ethBalanceData ? formatEther(ethBalanceData.value) : '0';
+
+    // Contract ETH Balance (since ethReserve is not public)
+    const { data: contractEthBalanceData } = useBalance({ 
+        address: dexAddress, 
+        watch: true 
+    });
+    const ethReserve = contractEthBalanceData ? formatEther(contractEthBalanceData.value) : '0';
 
     // Token decimals
     const { data: zdexDecimalsData } = useReadContract({
@@ -45,7 +51,6 @@ export const useDex = () => {
         watch: true,
     });
     const zdexDecimals = zdexDecimalsData !== undefined ? Number(zdexDecimalsData) : undefined;
-    // const zdexDecimals = 18
 
     // Token balance with periodic refresh
     const { data: rawTokenBalanceData, refetch: refetchTokenBalance } = useReadContract({
@@ -68,7 +73,6 @@ export const useDex = () => {
         }
     }, [rawTokenBalanceData, zdexDecimals, address, tokenAddress]);
     
-
     useEffect(() => {
         if (isConnected) {
             const interval = setInterval(refetchTokenBalance, 15000);
@@ -76,15 +80,7 @@ export const useDex = () => {
         }
     }, [isConnected, refetchTokenBalance]);
 
-    // Reserves
-    const { data: ethReserveData } = useReadContract({
-        ...dexContractConfig,
-        functionName: 'ethReserve',
-        enabled: !!dexAddress,
-        watch: true,
-    });
-    const ethReserve = ethReserveData ? formatEther(ethReserveData) : '0';
-
+    // Token Reserve (public in contract)
     const { data: tokenReserveData } = useReadContract({
         ...dexContractConfig,
         functionName: 'tokenReserve',
@@ -98,9 +94,7 @@ export const useDex = () => {
         return '0';
     }, [tokenReserveData, zdexDecimals]);
 
-    // Rest of the hook implementation (swap functions, liquidity functions, etc.)
-    // ... (keep all your existing functions as they are)
-
+    // Allowance
     const { data: allowanceData } = useReadContract({
         ...tokenContractConfig,
         functionName: 'allowance',
@@ -115,6 +109,7 @@ export const useDex = () => {
         return '0';
     }, [allowanceData, zdexDecimals]);
 
+    // Token price from oracle
     const { data: ethPriceFromOracleData } = useReadContract({
         ...dexContractConfig,
         functionName: 'getTokenPriceInETH',
@@ -156,24 +151,15 @@ export const useDex = () => {
         }
     }, [dexContractConfig, slippage, publicClient, dexAddress, zdexDecimals]);
 
-
-    // This useEffect is good for automatically updating 'toAmount' when 'fromAmount' changes
     useEffect(() => {
         const updateOutput = async () => {
             if (!fromAmount) {
                 setToAmount('');
                 return;
             }
-            // This useEffect typically handles the "from" input value, assuming ETH to Token swap for a simple demo.
-            // In a real UI with a toggle, you'd pass `isEthToToken` to this effect.
-            // For now, let's keep it simple as the SwapPanel will handle direction.
-            // The `getSwapOutput` will be called by `SwapPanel` if it needs to dynamically calculate.
-            // If you want this hook to handle it, you'd need to pass `isEthToToken` into `useDex` or make this more dynamic.
-            // For now, the `SwapPanel` component is expected to use `getSwapOutput` for dynamic updates.
         }
         updateOutput();
-    }, [fromAmount, setToAmount, getSwapOutput]); // getSwapOutput is a dependency
-
+    }, [fromAmount, setToAmount, getSwapOutput]);
 
     const handleEthToTokenSwap = useCallback(() => {
         if (!fromAmount || !toAmount || zdexDecimals === undefined) {
@@ -181,17 +167,29 @@ export const useDex = () => {
             return;
         }
         try {
+            setIsLoading(true);
             ethToTokenSwap({
                 ...dexContractConfig,
                 functionName: 'ethToTokenSwap',
                 value: parseEther(fromAmount), // ETH amount
                 args: [parseUnits(toAmount, zdexDecimals)] // minTokens (use ZDEX decimals)
+            }, {
+                onSuccess: () => {
+                    console.log("ETH to Token swap successful");
+                    setFromAmount('');
+                    setToAmount('');
+                    setIsLoading(false);
+                },
+                onError: (error) => {
+                    console.error("ETH to Token swap failed:", error);
+                    setIsLoading(false);
+                }
             });
         } catch (error) {
             console.error("Error initiating ETH to Token Swap:", error);
+            setIsLoading(false);
         }
     }, [fromAmount, toAmount, zdexDecimals, dexContractConfig, ethToTokenSwap]);
-
 
     const handleTokenToEthSwap = useCallback(() => {
         if (!fromAmount || !toAmount || zdexDecimals === undefined) {
@@ -200,6 +198,7 @@ export const useDex = () => {
         }
 
         try {
+            setIsLoading(true);
             const parsedTokenAmount = parseUnits(fromAmount, zdexDecimals); // ZDEX amount
             const parsedEthAmount = parseEther(toAmount); // ETH amount
 
@@ -217,17 +216,29 @@ export const useDex = () => {
                             parsedTokenAmount,
                             parsedEthAmount
                         ]
+                    }, {
+                        onSuccess: () => {
+                            console.log("Token to ETH swap successful");
+                            setFromAmount('');
+                            setToAmount('');
+                            setIsLoading(false);
+                        },
+                        onError: (error) => {
+                            console.error("Token to ETH swap failed:", error);
+                            setIsLoading(false);
+                        }
                     });
                 },
                 onError: (error) => {
                     console.error("Token approval failed:", error);
+                    setIsLoading(false);
                 }
             });
         } catch (error) {
             console.error("Error initiating Token to ETH Swap:", error);
+            setIsLoading(false);
         }
     }, [fromAmount, toAmount, dexAddress, tokenContractConfig, dexContractConfig, approve, tokenToEthSwap, zdexDecimals]);
-
 
     const handleAddLiquidity = useCallback(() => {
         if (!ethLiquidityAmount || !liquidityAmount || zdexDecimals === undefined) {
@@ -235,6 +246,7 @@ export const useDex = () => {
             return;
         }
         try {
+            setIsLoading(true);
             const parsedEthLiquidityAmount = parseEther(ethLiquidityAmount); // ETH amount
             const parsedTokenLiquidityAmount = parseUnits(liquidityAmount, zdexDecimals); // ZDEX amount
 
@@ -250,17 +262,29 @@ export const useDex = () => {
                         functionName: 'addLiquidity',
                         value: parsedEthLiquidityAmount,
                         args: [parsedTokenLiquidityAmount]
+                    }, {
+                        onSuccess: () => {
+                            console.log("Add liquidity successful");
+                            setEthLiquidityAmount('');
+                            setLiquidityAmount('');
+                            setIsLoading(false);
+                        },
+                        onError: (error) => {
+                            console.error("Add liquidity failed:", error);
+                            setIsLoading(false);
+                        }
                     });
                 },
                 onError: (error) => {
                     console.error("Liquidity approval failed:", error);
+                    setIsLoading(false);
                 }
             });
         } catch (error) {
             console.error("Error initiating Add Liquidity:", error);
+            setIsLoading(false);
         }
     }, [ethLiquidityAmount, liquidityAmount, tokenContractConfig, dexContractConfig, approve, addLiquidity, zdexDecimals]);
-
 
     const handleRemoveLiquidity = useCallback(() => {
         if (!liquidityAmount || zdexDecimals === undefined) {
@@ -268,15 +292,27 @@ export const useDex = () => {
             return;
         }
         try {
+            setIsLoading(true);
             const parsedLiquidityAmount = parseUnits(liquidityAmount, zdexDecimals); // ZDEX amount to remove
 
             removeLiquidity({
                 ...dexContractConfig,
                 functionName: 'removeLiquidity',
                 args: [parsedLiquidityAmount]
+            }, {
+                onSuccess: () => {
+                    console.log("Remove liquidity successful");
+                    setLiquidityAmount('');
+                    setIsLoading(false);
+                },
+                onError: (error) => {
+                    console.error("Remove liquidity failed:", error);
+                    setIsLoading(false);
+                }
             });
         } catch (error) {
             console.error("Error initiating Remove Liquidity:", error);
+            setIsLoading(false);
         }
     }, [liquidityAmount, dexContractConfig, removeLiquidity, zdexDecimals]);
 
@@ -306,6 +342,7 @@ export const useDex = () => {
         tokenReserve,
         allowance,
         tokenPrice,
-        chainId
+        chainId,
+        isLoading
     };
 };

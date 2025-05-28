@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ArrowUpIcon, BoltIcon } from '@heroicons/react/24/outline';
+import { ArrowUpIcon } from '@heroicons/react/24/outline';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -39,15 +39,53 @@ const Footer = () => {
           >
             <motion.div
               animate={{
-                opacity: [1, 0.7, 1],
+                rotate: [0, 360],
                 transition: { 
-                  duration: 3, 
+                  duration: 20, 
                   repeat: Infinity,
-                  ease: "easeInOut"
+                  ease: "linear"
                 }
               }}
             >
-              <BoltIcon className="h-4 w-4 text-blue-400 group-hover:text-blue-300 transition-colors" />
+              <svg 
+                className="h-5 w-5 animate-pulse" 
+                viewBox="0 0 40 40" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <defs>
+                  <linearGradient id="zdex-gradient-footer" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#3B82F6" />
+                    <stop offset="50%" stopColor="#8B5CF6" />
+                    <stop offset="100%" stopColor="#06B6D4" />
+                  </linearGradient>
+                  <linearGradient id="zdex-inner-footer" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#60A5FA" />
+                    <stop offset="100%" stopColor="#A78BFA" />
+                  </linearGradient>
+                </defs>
+                
+                <path
+                  d="M20 2 L32 10 L32 26 L20 34 L8 26 L8 10 Z"
+                  fill="url(#zdex-gradient-footer)"
+                  opacity="0.9"
+                />
+                
+                <g fill="url(#zdex-inner-footer)">
+                  <rect x="12" y="12" width="2" height="12" rx="1" />
+                  <rect x="26" y="12" width="2" height="12" rx="1" />
+                  <rect x="12" y="12" width="16" height="2" rx="1" />
+                  <path d="M14 18 L26 18 L14 22 L26 22 Z" fill="white" opacity="0.9" />
+                  <rect x="12" y="22" width="16" height="2" rx="1" />
+                </g>
+                
+                <circle cx="12" cy="8" r="1.5" fill="#60A5FA" opacity="0.7" />
+                <circle cx="28" cy="8" r="1.5" fill="#60A5FA" opacity="0.7" />
+                <circle cx="34" cy="20" r="1.5" fill="#60A5FA" opacity="0.7" />
+                <circle cx="28" cy="32" r="1.5" fill="#60A5FA" opacity="0.7" />
+                <circle cx="12" cy="32" r="1.5" fill="#60A5FA" opacity="0.7" />
+                <circle cx="6" cy="20" r="1.5" fill="#60A5FA" opacity="0.7" />
+              </svg>
             </motion.div>
             <span className="text-sm font-medium bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
               ZDEX
@@ -76,5 +114,6 @@ const Footer = () => {
     </motion.footer>
   );
 };
+
 
 export default Footer;

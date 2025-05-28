@@ -1,58 +1,56 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { useReadContract } from "wagmi";
-import { DEX_ABI } from "../../utils/constants";
+import { useReadContract, useBalance } from "wagmi";
+import { DEX_ABI, TOKEN_ABI, TOKEN_CONTRACT_ADDRESS } from "../../utils/constants";
 import { 
   CurrencyDollarIcon, 
-  ArrowsRightLeftIcon, 
-  ArrowTrendingUpIcon,
-  CubeTransparentIcon,
-  BanknotesIcon
+  ArrowsRightLeftIcon,
+  CubeTransparentIcon
 } from "@heroicons/react/24/outline";
-import { formatEther } from "viem";
+import { formatEther, formatUnits } from "viem";
 
 export const StatsPanel = ({ dexAddress }) => {
-  // Read contract data
-  const { data: ethReserveRaw } = useReadContract({
+  // Since ethReserve is not public in contract, we'll read the contract's ETH balance
+  const { data: contractEthBalance } = useBalance({
     address: dexAddress,
-    abi: DEX_ABI,
-    functionName: 'ethReserve'
+    watch: true
   });
 
   const { data: tokenReserveRaw } = useReadContract({
     address: dexAddress,
     abi: DEX_ABI,
-    functionName: 'tokenReserve'
+    functionName: 'tokenReserve',
+    watch: true
   });
 
-  // Get price from contract
-  const { data: tokenPriceInEth } = useReadContract({
-    address: dexAddress,
-    abi: DEX_ABI,
-    functionName: 'getTokenPriceInETH'
+  // Get token decimals
+  const { data: zdexDecimalsData } = useReadContract({
+    address: TOKEN_CONTRACT_ADDRESS,
+    abi: TOKEN_ABI,
+    functionName: 'decimals',
+    enabled: !!TOKEN_CONTRACT_ADDRESS,
+    watch: true,
   });
+  const zdexDecimals = zdexDecimalsData !== undefined ? Number(zdexDecimalsData) : undefined;
 
-  // Format raw data
+  // Format reserves
   const ethReserve = useMemo(() => 
-    ethReserveRaw ? parseFloat(formatEther(ethReserveRaw)) : 0, 
-    [ethReserveRaw]
+    contractEthBalance ? parseFloat(formatEther(contractEthBalance.value)) : 0, 
+    [contractEthBalance]
   );
 
-  const tokenReserve = useMemo(() => 
-    tokenReserveRaw ? parseFloat(formatEther(tokenReserveRaw)) : 0, 
-    [tokenReserveRaw]
-  );
+  const tokenReserve = useMemo(() => {
+    if (tokenReserveRaw !== undefined && zdexDecimals !== undefined) {
+      return parseFloat(formatUnits(tokenReserveRaw, zdexDecimals));
+    }
+    return 0;
+  }, [tokenReserveRaw, zdexDecimals]);
 
-  // Calculate exchange rates
+  // Calculate exchange rate (1 ETH = X ZDEX)
   const exchangeRate = useMemo(() => {
-    if (ethReserve === 0 || tokenReserve === 0) return 0;
+    if (ethReserve <= 0 || tokenReserve <= 0) return 0;
     return tokenReserve / ethReserve;
   }, [ethReserve, tokenReserve]);
-
-  const tokenPrice = useMemo(() => {
-    if (!tokenPriceInEth) return 0;
-    return parseFloat(formatEther(tokenPriceInEth));
-  }, [tokenPriceInEth]);
 
   // Stats data
   const stats = [
@@ -72,17 +70,10 @@ export const StatsPanel = ({ dexAddress }) => {
     },
     {
       name: 'Exchange Rate',
-      value: exchangeRate.toFixed(4),
-      unit: 'ZDEX/ETH',
+      value: exchangeRate > 0 ? exchangeRate.toFixed(4) : 'N/A',
+      unit: exchangeRate > 0 ? 'ZDEX/ETH' : '',
       icon: ArrowsRightLeftIcon,
       color: 'text-green-400'
-    },
-    {
-      name: 'Token Price',
-      value: tokenPrice.toFixed(6),
-      unit: 'ETH/ZDEX',
-      icon: BanknotesIcon,
-      color: 'text-yellow-400'
     }
   ];
 
@@ -90,7 +81,7 @@ export const StatsPanel = ({ dexAddress }) => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-800/50 shadow-lg"
+      className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-800/50 shadow-lg h-full"
     >
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
@@ -102,23 +93,24 @@ export const StatsPanel = ({ dexAddress }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {stats.map((stat, index) => (
           <motion.div
             key={index}
             whileHover={{ y: -2 }}
             className="p-4 bg-gray-900/30 rounded-xl border border-gray-800/30 hover:border-gray-700/50 transition-colors"
           >
-            <div className="flex items-start justify-between">
-              <div className={`p-2 mr-3 rounded-lg ${stat.color.replace('text', 'bg')}/10`}>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </div>
-            </div>
-            <div className="mt-3">
-              <p className="text-sm text-gray-400">{stat.name}</p>
-              <div className="flex items-baseline mt-1">
-                <p className="text-xl font-semibold mr-2">{stat.value}</p>
-                <p className="text-sm text-gray-400">{stat.unit}</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className={`p-2 mr-3 rounded-lg ${stat.color.replace('text', 'bg')}/10`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">{stat.name}</p>
+                  <p className="text-xl font-semibold mt-1">
+                    {stat.value} {stat.unit && <span className="text-sm text-gray-400 ml-1">{stat.unit}</span>}
+                  </p>
+                </div>
               </div>
             </div>
           </motion.div>

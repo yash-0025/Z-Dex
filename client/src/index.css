@@ -1,7 +1,5 @@
 @import "tailwindcss";
 
-
-
 @layer utilities {
   /* Base dark gradient with subtle blue/green accents */
   .bg-web3-dark {
