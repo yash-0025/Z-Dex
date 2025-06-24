@@ -1,6 +1,9 @@
 ## Project Overview
 - A full-featured DEX enabling ETH/ZDEX token swaps with integrated liquidity pool management for seamless trading experience. Get your ZDEX token by swapping in with ETH pool reserve.
 - If you want to get the ETH back you can just reswap back to ETH using your ZDEX balance according with the exchange rate.
+- As of now it is deployed on Sepolia .
+- The layout is fully responsive and can be used on any preferred devices like mobile, tablet or desktops.
+
 
 
 
